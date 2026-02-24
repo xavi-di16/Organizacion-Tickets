@@ -48,14 +48,37 @@
 <body class="bg-black h-screen flex flex-col font-sans text-white">
 
     <!-- Encabezado -->
-    <header class="bg-black border-b border-[#39ff14] shadow-[0_4px_15px_rgba(57,255,20,0.1)] px-6 py-4 flex justify-between items-center shrink-0">
-        <div class="flex items-center gap-3 text-[#39ff14]">
+    <header class="bg-black border-b border-[#39ff14] shadow-[0_4px_15px_rgba(57,255,20,0.1)] px-6 py-4 flex flex-col md:flex-row justify-between items-center shrink-0 gap-4">
+        <!-- Título (Izquierda) -->
+        <div class="flex-1 flex items-center gap-3 text-[#39ff14] w-full md:w-auto">
             <i class="fas fa-layer-group text-2xl"></i>
-            <h1 class="text-xl font-bold tracking-wide">Mis Tickets en Curso</h1>
+            <h1 class="text-xl font-bold tracking-wide">Mis Tickets</h1>
         </div>
-        <button onclick="openModal()" class="bg-[#39ff14] text-black hover:bg-white hover:shadow-[0_0_15px_#39ff14] font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2">
-            <i class="fas fa-plus"></i> Nuevo Ticket
-        </button>
+
+        <!-- Estadísticas Globales (Centro) -->
+        <div class="flex gap-4 md:gap-8 text-center">
+            <div class="bg-zinc-900 border border-zinc-700 px-4 py-1.5 rounded-lg shadow-[0_0_10px_rgba(57,255,20,0.05)] min-w-[140px]">
+                <span class="text-[10px] text-zinc-400 block font-bold uppercase tracking-widest mb-0.5">Por Reparar</span>
+                <div class="flex items-center justify-center gap-2">
+                    <i class="fas fa-tools text-zinc-500 text-sm"></i>
+                    <span class="text-2xl font-bold text-white" id="stat-por-reparar">0</span>
+                </div>
+            </div>
+            <div class="bg-black border border-[#39ff14] px-4 py-1.5 rounded-lg shadow-[0_0_15px_rgba(57,255,20,0.15)] min-w-[140px]">
+                <span class="text-[10px] text-[#39ff14] block font-bold uppercase tracking-widest mb-0.5">Reparados</span>
+                <div class="flex items-center justify-center gap-2">
+                    <i class="fas fa-check-double text-[#39ff14] text-sm"></i>
+                    <span class="text-2xl font-bold text-[#39ff14]" id="stat-reparados">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botón Nuevo Ticket (Derecha) -->
+        <div class="flex-1 flex justify-end w-full md:w-auto">
+            <button onclick="openModal()" class="bg-[#39ff14] text-black hover:bg-white hover:shadow-[0_0_15px_#39ff14] font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 w-full md:w-auto justify-center">
+                <i class="fas fa-plus"></i> Nuevo Ticket
+            </button>
+        </div>
     </header>
 
     <!-- Tablero Principal -->
@@ -78,9 +101,15 @@
             <form id="ticketForm" class="p-6">
                 <input type="hidden" id="ticketId">
                 
-                <div class="mb-4">
-                    <label class="block text-sm font-semibold mb-1 text-zinc-300">N° de Requerimiento <span class="text-xs font-normal text-zinc-500">(Ej: R-021354)</span></label>
-                    <input type="text" id="reqNumber" required class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] uppercase placeholder-zinc-700">
+                <div class="flex gap-4 mb-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-semibold mb-1 text-zinc-300">N° de Requerimiento <span class="text-[10px] font-normal text-zinc-500">(Ej: R-021354)</span></label>
+                        <input type="text" id="reqNumber" required class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] uppercase placeholder-zinc-700">
+                    </div>
+                    <div class="w-24 shrink-0">
+                        <label class="block text-sm font-semibold mb-1 text-[#39ff14]">Equipos</label>
+                        <input type="number" id="reqEquipos" required min="1" value="1" class="w-full px-3 py-2 bg-black border border-[#39ff14] text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-[#39ff14] text-center font-bold">
+                    </div>
                 </div>
                 
                 <div class="mb-4">
@@ -134,6 +163,24 @@
 
         // --- 2. FUNCIONES DE RENDERIZADO ---
 
+        function updateStats() {
+            let porReparar = 0;
+            let reparados = 0;
+
+            tickets.forEach(ticket => {
+                const qty = parseInt(ticket.equipmentCount) || 1;
+                // Consideramos que si está finalizado o esperando retiro, el equipo ya está reparado.
+                if (ticket.status === 'esperando_retiro' || ticket.status === 'finalizado') {
+                    reparados += qty;
+                } else {
+                    porReparar += qty;
+                }
+            });
+
+            document.getElementById('stat-por-reparar').innerText = porReparar;
+            document.getElementById('stat-reparados').innerText = reparados;
+        }
+
         function renderBoard() {
             const board = document.getElementById('board');
             board.innerHTML = ''; 
@@ -166,6 +213,9 @@
                     container.appendChild(createTicketCard(ticket));
                 });
             });
+
+            // Actualizar estadísticas cada vez que se renderiza el tablero
+            updateStats();
         }
 
         function createTicketCard(ticket) {
@@ -206,6 +256,8 @@
                 `;
             }
 
+            const equipmentCount = ticket.equipmentCount || 1;
+
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
                     <span class="inline-block px-2 py-1 bg-black border border-[#39ff14] text-[#39ff14] text-xs font-bold rounded">
@@ -221,13 +273,19 @@
                     </div>
                 </div>
                 
-                <h3 class="font-bold text-white text-sm mb-1 leading-tight">${ticket.subject}</h3>
+                <h3 class="font-bold text-white text-sm mb-2 leading-tight">${ticket.subject}</h3>
                 
-                ${ticket.contact ? `
-                <div class="text-xs text-zinc-300 flex items-center gap-1.5 mb-2 bg-zinc-800 p-1.5 rounded border border-zinc-700">
-                    <i class="fas fa-address-book text-zinc-500"></i>
-                    <span class="truncate">${ticket.contact}</span>
-                </div>` : ''}
+                <div class="flex flex-wrap gap-2 mb-2">
+                    ${ticket.contact ? `
+                    <div class="text-xs text-zinc-300 flex items-center gap-1.5 bg-zinc-800 p-1.5 rounded border border-zinc-700 flex-1 min-w-[120px]">
+                        <i class="fas fa-address-book text-zinc-500"></i>
+                        <span class="truncate">${ticket.contact}</span>
+                    </div>` : ''}
+                    <div class="text-xs flex items-center gap-1.5 bg-black p-1.5 rounded border border-[#39ff14] text-[#39ff14] font-bold shrink-0" title="Cantidad de equipos en este ticket">
+                        <i class="fas fa-desktop"></i>
+                        <span>${equipmentCount}</span>
+                    </div>
+                </div>
                 
                 ${tasksHtml}
 
@@ -260,11 +318,12 @@
             const subject = document.getElementById('reqSubject').value;
             const contact = document.getElementById('reqContact').value;
             const status = document.getElementById('reqStatus').value;
+            const equipmentCount = parseInt(document.getElementById('reqEquipos').value) || 1;
 
             if (id) {
                 const ticketIndex = tickets.findIndex(t => t.id === id);
                 if (ticketIndex > -1) {
-                    tickets[ticketIndex] = { ...tickets[ticketIndex], number, subject, contact, status };
+                    tickets[ticketIndex] = { ...tickets[ticketIndex], number, subject, contact, status, equipmentCount };
                 }
             } else {
                 tickets.push({
@@ -273,6 +332,7 @@
                     subject,
                     contact,
                     status,
+                    equipmentCount,
                     tasks: [],
                     createdAt: new Date().toISOString()
                 });
@@ -371,6 +431,7 @@
             document.body.classList.add('modal-open');
             form.reset();
             document.getElementById('ticketId').value = '';
+            document.getElementById('reqEquipos').value = '1';
             document.getElementById('modalTitle').innerText = 'Nuevo Ticket';
             
             modal.classList.remove('hidden');
@@ -391,6 +452,7 @@
             document.getElementById('reqSubject').value = ticket.subject;
             document.getElementById('reqContact').value = ticket.contact || '';
             document.getElementById('reqStatus').value = ticket.status;
+            document.getElementById('reqEquipos').value = ticket.equipmentCount || 1;
             
             document.getElementById('modalTitle').innerText = 'Editar Ticket';
             
