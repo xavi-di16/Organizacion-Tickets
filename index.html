@@ -56,7 +56,7 @@
         </div>
 
         <!-- Estadísticas Globales (Centro) -->
-        <div class="flex gap-4 md:gap-8 text-center">
+        <div class="flex gap-4 md:gap-8 text-center order-3 md:order-2 w-full md:w-auto justify-center">
             <div class="bg-zinc-900 border border-zinc-700 px-4 py-1.5 rounded-lg shadow-[0_0_10px_rgba(57,255,20,0.05)] min-w-[140px]">
                 <span class="text-[10px] text-zinc-400 block font-bold uppercase tracking-widest mb-0.5">Por Reparar</span>
                 <div class="flex items-center justify-center gap-2">
@@ -73,9 +73,13 @@
             </div>
         </div>
 
-        <!-- Botón Nuevo Ticket (Derecha) -->
-        <div class="flex-1 flex justify-end w-full md:w-auto">
-            <button onclick="openModal()" class="bg-[#39ff14] text-black hover:bg-white hover:shadow-[0_0_15px_#39ff14] font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 w-full md:w-auto justify-center">
+        <!-- Buscador y Botón Nuevo Ticket (Derecha) -->
+        <div class="flex-1 flex flex-col md:flex-row justify-end items-center w-full md:w-auto gap-3 order-2 md:order-3">
+            <div class="relative w-full md:w-64">
+                <i class="fas fa-search absolute left-3 top-3 text-zinc-500"></i>
+                <input type="text" id="searchInput" placeholder="Buscar ticket..." oninput="renderBoard()" class="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] placeholder-zinc-600 transition-colors">
+            </div>
+            <button onclick="openModal()" class="bg-[#39ff14] text-black hover:bg-white hover:shadow-[0_0_15px_#39ff14] font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 w-full md:w-auto justify-center whitespace-nowrap">
                 <i class="fas fa-plus"></i> Nuevo Ticket
             </button>
         </div>
@@ -194,12 +198,28 @@
         function renderBoard() {
             const board = document.getElementById('board');
             board.innerHTML = ''; 
+            
+            // Obtener el término de búsqueda actual
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
 
             COLUMNS.forEach(col => {
                 const colDiv = document.createElement('div');
                 colDiv.className = `flex flex-col bg-zinc-900 rounded-xl min-w-[320px] w-[320px] max-h-full shrink-0 border border-zinc-800`;
                 
-                const colTickets = tickets.filter(t => t.status === col.id);
+                // Filtrar por columna y también por la barra de búsqueda si hay texto escrito
+                const colTickets = tickets.filter(t => {
+                    if (t.status !== col.id) return false;
+                    
+                    if (!searchTerm) return true; // Si no hay búsqueda, mostramos todo en esta columna
+                    
+                    // Comprobamos si el término de búsqueda está en el número, asunto o contacto
+                    const matchNumber = t.number.toLowerCase().includes(searchTerm);
+                    const matchSubject = t.subject.toLowerCase().includes(searchTerm);
+                    const matchContact = t.contact ? t.contact.toLowerCase().includes(searchTerm) : false;
+                    
+                    return matchNumber || matchSubject || matchContact;
+                });
 
                 colDiv.innerHTML = `
                     <div class="p-3 border-b border-zinc-800 flex justify-between items-center bg-black rounded-t-xl">
