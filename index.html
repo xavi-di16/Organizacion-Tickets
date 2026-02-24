@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Organizador de Tickets</title>
+    <!-- Tailwind CSS para el diseño rápido y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para los íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilos personalizados para el scrollbar y animaciones */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #18181b; /* zinc-900 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #39ff14; /* verde neón */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ffffff; 
+        }
+        .drag-over {
+            background-color: #18181b;
+            border: 2px dashed #39ff14;
+        }
+        .ticket-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .ticket-card:active {
+            cursor: grabbing;
+        }
+        .modal-open {
+            overflow: hidden;
+        }
+        
+        /* Checkbox personalizado estilo neón */
+        input[type="checkbox"] {
+            accent-color: #39ff14;
+        }
+    </style>
+</head>
+<body class="bg-black h-screen flex flex-col font-sans text-white">
+
+    <!-- Encabezado -->
+    <header class="bg-black border-b border-[#39ff14] shadow-[0_4px_15px_rgba(57,255,20,0.1)] px-6 py-4 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-3 text-[#39ff14]">
+            <i class="fas fa-layer-group text-2xl"></i>
+            <h1 class="text-xl font-bold tracking-wide">Mis Tickets en Curso</h1>
+        </div>
+        <button onclick="openModal()" class="bg-[#39ff14] text-black hover:bg-white hover:shadow-[0_0_15px_#39ff14] font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2">
+            <i class="fas fa-plus"></i> Nuevo Ticket
+        </button>
+    </header>
+
+    <!-- Tablero Principal -->
+    <main class="flex-1 overflow-x-auto overflow-y-hidden p-6">
+        <div class="flex gap-6 h-full items-start" id="board">
+            <!-- Las columnas se generarán dinámicamente con JavaScript -->
+        </div>
+    </main>
+
+    <!-- Modal para Agregar/Editar Ticket -->
+    <div id="ticketModal" class="fixed inset-0 bg-black bg-opacity-80 hidden justify-center items-center z-50 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+        <div class="bg-zinc-900 rounded-xl shadow-[0_0_30px_rgba(57,255,20,0.15)] border border-[#39ff14] w-full max-w-md mx-4 transform scale-95 transition-transform duration-300" id="modalContent">
+            <div class="flex justify-between items-center border-b border-zinc-800 px-6 py-4">
+                <h2 class="text-xl font-bold text-[#39ff14]" id="modalTitle">Nuevo Ticket</h2>
+                <button onclick="closeModal()" class="text-zinc-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="ticketForm" class="p-6">
+                <input type="hidden" id="ticketId">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1 text-zinc-300">N° de Requerimiento <span class="text-xs font-normal text-zinc-500">(Ej: R-021354)</span></label>
+                    <input type="text" id="reqNumber" required class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] uppercase placeholder-zinc-700">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1 text-zinc-300">Asunto / Falla</label>
+                    <input type="text" id="reqSubject" required placeholder="Ej: Equipo bloqueado, no enciende..." class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] placeholder-zinc-700">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1 text-zinc-300">Contacto / Organización</label>
+                    <div class="flex relative">
+                        <span class="inline-flex items-center px-3 text-sm text-zinc-400 bg-zinc-900 border border-r-0 border-zinc-700 rounded-l-md">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input type="text" id="reqContact" placeholder="Nombre y Teléfono" class="rounded-none rounded-r-lg bg-black border border-zinc-700 text-white focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] block flex-1 min-w-0 w-full text-sm p-2.5 placeholder-zinc-700">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-1 text-zinc-300">Estado Inicial</label>
+                    <select id="reqStatus" class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14]">
+                        <option value="por_llamar">Por Llamar / Contactar</option>
+                        <option value="recibido">Equipo Recibido (Acá)</option>
+                        <option value="en_proceso">En Proceso / Reparando</option>
+                        <option value="esperando_retiro">Esperando Retiro</option>
+                        <option value="finalizado">Finalizado / Entregado</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-white hover:bg-zinc-800 rounded-lg font-medium transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-[#39ff14] hover:bg-white text-black rounded-lg font-bold shadow-[0_0_10px_rgba(57,255,20,0.3)] hover:shadow-[0_0_15px_#39ff14] transition-all">Guardar Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURACIÓN Y ESTADO ---
+        
+        // Estructura de las columnas adaptadas a blanco/negro/neón
+        const COLUMNS = [
+            { id: 'por_llamar', title: '📞 Por Llamar', style: 'border-[#39ff14] text-[#39ff14]' },
+            { id: 'recibido', title: '📥 Equipo Recibido', style: 'border-[#39ff14] text-[#39ff14]' },
+            { id: 'en_proceso', title: '⚙️ En Proceso', style: 'border-[#39ff14] text-[#39ff14]' },
+            { id: 'esperando_retiro', title: '⏳ Esperando Retiro', style: 'border-[#39ff14] text-[#39ff14]' },
+            { id: 'finalizado', title: '✅ Finalizados', style: 'border-[#39ff14] text-[#39ff14]' }
+        ];
+
+        // Estado principal de la aplicación
+        let tickets = JSON.parse(localStorage.getItem('myTickets')) || [];
+
+        // --- 2. FUNCIONES DE RENDERIZADO ---
+
+        function renderBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = ''; 
+
+            COLUMNS.forEach(col => {
+                const colDiv = document.createElement('div');
+                colDiv.className = `flex flex-col bg-zinc-900 rounded-xl min-w-[320px] w-[320px] max-h-full shrink-0 border border-zinc-800`;
+                
+                const colTickets = tickets.filter(t => t.status === col.id);
+
+                colDiv.innerHTML = `
+                    <div class="p-3 border-b border-zinc-800 flex justify-between items-center bg-black rounded-t-xl">
+                        <h2 class="font-bold text-sm uppercase tracking-wider text-white">${col.title}</h2>
+                        <span class="text-xs font-bold px-2 py-1 rounded border bg-black ${col.style}">${colTickets.length}</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-3 space-y-3 ticket-container" 
+                         id="col-${col.id}" 
+                         ondrop="drop(event, '${col.id}')" 
+                         ondragover="allowDrop(event)"
+                         ondragenter="dragEnter(event)"
+                         ondragleave="dragLeave(event)">
+                        <!-- Aquí van los tickets -->
+                    </div>
+                `;
+                
+                board.appendChild(colDiv);
+                
+                const container = colDiv.querySelector('.ticket-container');
+                colTickets.forEach(ticket => {
+                    container.appendChild(createTicketCard(ticket));
+                });
+            });
+        }
+
+        function createTicketCard(ticket) {
+            const card = document.createElement('div');
+            card.className = 'ticket-card bg-black p-4 rounded-lg border border-zinc-700 cursor-grab relative group hover:border-[#39ff14] hover:shadow-[0_0_10px_rgba(57,255,20,0.1)]';
+            card.draggable = true;
+            card.id = `ticket-${ticket.id}`;
+            card.ondragstart = (e) => drag(e, ticket.id);
+
+            let tasksHtml = '';
+            if (ticket.tasks && ticket.tasks.length > 0) {
+                const total = ticket.tasks.length;
+                const completed = ticket.tasks.filter(t => t.done).length;
+                const progress = (completed / total) * 100;
+
+                tasksHtml = `
+                    <div class="mt-3 bg-zinc-900 p-2 rounded border border-zinc-800">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-semibold text-zinc-400">Tareas (${completed}/${total})</span>
+                            <div class="w-16 bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-[#39ff14] h-full transition-all duration-300" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        <ul class="space-y-1">
+                            ${ticket.tasks.map((task, index) => `
+                                <li class="flex items-start gap-2 text-sm">
+                                    <input type="checkbox" ${task.done ? 'checked' : ''} 
+                                           onchange="toggleTask('${ticket.id}', ${index})"
+                                           class="mt-1 w-3.5 h-3.5 cursor-pointer bg-black border-zinc-600">
+                                    <span class="${task.done ? 'line-through text-zinc-600' : 'text-zinc-200'} leading-tight break-words flex-1">${task.text}</span>
+                                    <button onclick="deleteTask('${ticket.id}', ${index})" class="text-zinc-600 hover:text-white opacity-0 group-hover:opacity-100 transition-colors">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <span class="inline-block px-2 py-1 bg-black border border-[#39ff14] text-[#39ff14] text-xs font-bold rounded">
+                        <i class="fas fa-ticket-alt mr-1"></i> ${ticket.number}
+                    </span>
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                        <button onclick="editTicket('${ticket.id}')" class="text-zinc-500 hover:text-[#39ff14] text-sm transition-colors" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteTicket('${ticket.id}')" class="text-zinc-500 hover:text-white text-sm transition-colors" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <h3 class="font-bold text-white text-sm mb-1 leading-tight">${ticket.subject}</h3>
+                
+                ${ticket.contact ? `
+                <div class="text-xs text-zinc-300 flex items-center gap-1.5 mb-2 bg-zinc-800 p-1.5 rounded border border-zinc-700">
+                    <i class="fas fa-address-book text-zinc-500"></i>
+                    <span class="truncate">${ticket.contact}</span>
+                </div>` : ''}
+                
+                ${tasksHtml}
+
+                <form onsubmit="addTask(event, '${ticket.id}')" class="mt-2 flex gap-1 relative">
+                    <input type="text" placeholder="Añadir tarea..." required class="w-full text-xs px-2 py-1.5 bg-black border border-zinc-700 text-white rounded focus:outline-none focus:border-[#39ff14] placeholder-zinc-600">
+                    <button type="submit" class="bg-zinc-800 text-[#39ff14] px-2 py-1 rounded border border-zinc-700 hover:bg-black hover:border-[#39ff14] transition-colors">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </form>
+            `;
+            return card;
+        }
+
+        // --- 3. LÓGICA DE DATOS Y EVENTOS ---
+
+        function saveToStorage() {
+            localStorage.setItem('myTickets', JSON.stringify(tickets));
+            renderBoard();
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        document.getElementById('ticketForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('ticketId').value;
+            const number = document.getElementById('reqNumber').value.toUpperCase();
+            const subject = document.getElementById('reqSubject').value;
+            const contact = document.getElementById('reqContact').value;
+            const status = document.getElementById('reqStatus').value;
+
+            if (id) {
+                const ticketIndex = tickets.findIndex(t => t.id === id);
+                if (ticketIndex > -1) {
+                    tickets[ticketIndex] = { ...tickets[ticketIndex], number, subject, contact, status };
+                }
+            } else {
+                tickets.push({
+                    id: generateId(),
+                    number,
+                    subject,
+                    contact,
+                    status,
+                    tasks: [],
+                    createdAt: new Date().toISOString()
+                });
+            }
+
+            saveToStorage();
+            closeModal();
+        });
+
+        function deleteTicket(id) {
+            if(confirm('¿Estás seguro de que deseas eliminar este ticket de tu organizador?')) {
+                tickets = tickets.filter(t => t.id !== id);
+                saveToStorage();
+            }
+        }
+
+        // --- 4. LÓGICA DE TAREAS DENTRO DEL TICKET ---
+
+        function addTask(event, ticketId) {
+            event.preventDefault();
+            const input = event.target.querySelector('input');
+            const taskText = input.value.trim();
+            
+            if (taskText) {
+                const ticket = tickets.find(t => t.id === ticketId);
+                if (ticket) {
+                    if (!ticket.tasks) ticket.tasks = [];
+                    ticket.tasks.push({ text: taskText, done: false });
+                    saveToStorage();
+                }
+            }
+        }
+
+        function toggleTask(ticketId, taskIndex) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (ticket && ticket.tasks[taskIndex]) {
+                ticket.tasks[taskIndex].done = !ticket.tasks[taskIndex].done;
+                saveToStorage();
+            }
+        }
+
+        function deleteTask(ticketId, taskIndex) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (ticket && ticket.tasks[taskIndex]) {
+                ticket.tasks.splice(taskIndex, 1);
+                saveToStorage();
+            }
+        }
+
+        // --- 5. DRAG AND DROP (ARRASTRAR Y SOLTAR) ---
+
+        function drag(ev, ticketId) {
+            ev.dataTransfer.setData("ticketId", ticketId);
+            ev.target.classList.add('opacity-50'); 
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            const container = ev.target.closest('.ticket-container');
+            if(container) container.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            const container = ev.target.closest('.ticket-container');
+            if(container) container.classList.remove('drag-over');
+        }
+
+        function drop(ev, newStatus) {
+            ev.preventDefault();
+            const container = ev.target.closest('.ticket-container');
+            if(container) container.classList.remove('drag-over');
+
+            const ticketId = ev.dataTransfer.getData("ticketId");
+            const ticketIndex = tickets.findIndex(t => t.id === ticketId);
+            
+            if (ticketIndex > -1 && tickets[ticketIndex].status !== newStatus) {
+                tickets[ticketIndex].status = newStatus;
+                saveToStorage();
+            }
+            
+            const draggedElement = document.getElementById(`ticket-${ticketId}`);
+            if(draggedElement) draggedElement.classList.remove('opacity-50');
+        }
+
+        // --- 6. CONTROL DEL MODAL ---
+
+        const modal = document.getElementById('ticketModal');
+        const modalContent = document.getElementById('modalContent');
+        const form = document.getElementById('ticketForm');
+
+        function openModal() {
+            document.body.classList.add('modal-open');
+            form.reset();
+            document.getElementById('ticketId').value = '';
+            document.getElementById('modalTitle').innerText = 'Nuevo Ticket';
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                document.getElementById('reqNumber').focus();
+            }, 10);
+        }
+
+        function editTicket(id) {
+            const ticket = tickets.find(t => t.id === id);
+            if (!ticket) return;
+
+            document.getElementById('ticketId').value = ticket.id;
+            document.getElementById('reqNumber').value = ticket.number;
+            document.getElementById('reqSubject').value = ticket.subject;
+            document.getElementById('reqContact').value = ticket.contact || '';
+            document.getElementById('reqStatus').value = ticket.status;
+            
+            document.getElementById('modalTitle').innerText = 'Editar Ticket';
+            
+            document.body.classList.add('modal-open');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('modal-open');
+            }, 300); 
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // --- 7. INICIALIZACIÓN ---
+        renderBoard();
+
+    </script>
+</body>
+</html>
