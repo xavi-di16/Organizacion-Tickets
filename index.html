@@ -203,6 +203,14 @@
             const searchInput = document.getElementById('searchInput');
             const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
 
+            // Lógica para detectar duplicados (ignorando tickets 'finalizado')
+            const activeTickets = tickets.filter(t => t.status !== 'finalizado');
+            const duplicatesCount = activeTickets.reduce((acc, ticket) => {
+                const num = ticket.number.toLowerCase();
+                acc[num] = (acc[num] || 0) + 1;
+                return acc;
+            }, {});
+
             COLUMNS.forEach(col => {
                 const colDiv = document.createElement('div');
                 colDiv.className = `flex flex-col bg-zinc-900 rounded-xl min-w-[320px] w-[320px] max-h-full shrink-0 border border-zinc-800`;
@@ -240,7 +248,9 @@
                 
                 const container = colDiv.querySelector('.ticket-container');
                 colTickets.forEach(ticket => {
-                    container.appendChild(createTicketCard(ticket));
+                    // Verificar si este ticket específico es un duplicado activo
+                    const isDuplicate = ticket.status !== 'finalizado' && duplicatesCount[ticket.number.toLowerCase()] > 1;
+                    container.appendChild(createTicketCard(ticket, isDuplicate));
                 });
             });
 
@@ -248,9 +258,17 @@
             updateStats();
         }
 
-        function createTicketCard(ticket) {
+        function createTicketCard(ticket, isDuplicate) {
             const card = document.createElement('div');
-            card.className = 'ticket-card bg-black p-4 rounded-lg border border-zinc-700 cursor-grab relative group hover:border-[#39ff14] hover:shadow-[0_0_10px_rgba(57,255,20,0.1)]';
+            
+            // Lógica de estilos si el ticket es duplicado
+            let cardClasses = 'ticket-card bg-black p-4 rounded-lg border cursor-grab relative group ';
+            if (isDuplicate) {
+                cardClasses += 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:shadow-[0_0_20px_rgba(239,68,68,0.6)]';
+            } else {
+                cardClasses += 'border-zinc-700 hover:border-[#39ff14] hover:shadow-[0_0_10px_rgba(57,255,20,0.1)]';
+            }
+            card.className = cardClasses;
             card.draggable = true;
             card.id = `ticket-${ticket.id}`;
             card.ondragstart = (e) => drag(e, ticket.id);
@@ -296,8 +314,10 @@
             const activeComm = commStyles[commStatus];
 
             card.innerHTML = `
+                ${isDuplicate ? `<div class="bg-red-900/40 border border-red-500 text-red-400 text-xs font-bold px-2 py-1.5 rounded mb-3 flex items-center justify-center gap-2 animate-pulse"><i class="fas fa-exclamation-triangle"></i> ¡TICKET DUPLICADO!</div>` : ''}
+                
                 <div class="flex justify-between items-start mb-2">
-                    <span class="inline-block px-2 py-1 bg-black border border-[#39ff14] text-[#39ff14] text-xs font-bold rounded">
+                    <span class="inline-block px-2 py-1 bg-black border ${isDuplicate ? 'border-red-500 text-red-400' : 'border-[#39ff14] text-[#39ff14]'} text-xs font-bold rounded">
                         <i class="fas fa-ticket-alt mr-1"></i> ${ticket.number}
                     </span>
                     <div class="flex items-center gap-3">
@@ -321,7 +341,7 @@
                         <i class="fas fa-address-book text-zinc-500"></i>
                         <span class="truncate">${ticket.contact}</span>
                     </div>` : ''}
-                    <div class="text-xs flex items-center gap-1.5 bg-black p-1.5 rounded border border-[#39ff14] text-[#39ff14] font-bold shrink-0" title="Cantidad de equipos en este ticket">
+                    <div class="text-xs flex items-center gap-1.5 bg-black p-1.5 rounded border ${isDuplicate ? 'border-red-500 text-red-400' : 'border-[#39ff14] text-[#39ff14]'} font-bold shrink-0" title="Cantidad de equipos en este ticket">
                         <i class="fas fa-desktop"></i>
                         <span>${equipmentCount}</span>
                     </div>
@@ -354,7 +374,7 @@
             e.preventDefault();
             
             const id = document.getElementById('ticketId').value;
-            const number = document.getElementById('reqNumber').value.toUpperCase();
+            const number = document.getElementById('reqNumber').value.toUpperCase().trim();
             const subject = document.getElementById('reqSubject').value;
             const contact = document.getElementById('reqContact').value;
             const status = document.getElementById('reqStatus').value;
