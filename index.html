@@ -8,26 +8,103 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome para los íconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Script inicial para cargar el tema sin parpadeos -->
+    <script>
+        const savedTheme = localStorage.getItem('myTheme') || 'neon';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
     <style>
-        /* Estilos personalizados para el scrollbar y animaciones */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        /* === MOTOR DE TEMAS (VARIABLES CSS) === */
+        :root {
+            /* Tema Neón (Por defecto) */
+            --accent: #39ff14;
+            --accent-text: #000000;
+            --accent-glow: rgba(57, 255, 20, 0.15);
+            --accent-glow-strong: rgba(57, 255, 20, 0.3);
+            --bg-main: #000000;
+            --bg-panel: #18181b; /* zinc-900 */
+            --bg-card: #000000;
+            --bg-input: #000000;
+            --bg-hover: #27272a; /* zinc-800 */
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa; /* zinc-400 */
+            --border-accent: #39ff14;
+            --border-muted: #3f3f46; /* zinc-700 */
+            --scroll-track: #18181b;
         }
-        ::-webkit-scrollbar-track {
-            background: #18181b; /* zinc-900 */
-            border-radius: 4px;
+
+        [data-theme="red"] {
+            --accent: #ef4444; /* red-500 */
+            --accent-text: #ffffff;
+            --accent-glow: rgba(239, 68, 68, 0.15);
+            --accent-glow-strong: rgba(239, 68, 68, 0.3);
+            --border-accent: #ef4444;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #39ff14; /* verde neón */
-            border-radius: 4px;
+
+        [data-theme="blue"] {
+            --accent: #3b82f6; /* blue-500 */
+            --accent-text: #ffffff;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --accent-glow-strong: rgba(59, 130, 246, 0.3);
+            --border-accent: #3b82f6;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #ffffff; 
+
+        [data-theme="white"] {
+            --accent: #f97316; /* Naranja estilo iTop */
+            --accent-text: #ffffff;
+            --accent-glow: rgba(249, 115, 22, 0.15);
+            --accent-glow-strong: rgba(249, 115, 22, 0.3);
+            --bg-main: #f8fafc; /* slate-50 */
+            --bg-panel: #f1f5f9; /* slate-100 */
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-hover: #e2e8f0; /* slate-200 */
+            --text-main: #0f172a; /* slate-900 */
+            --text-muted: #64748b; /* slate-500 */
+            --border-accent: #f97316;
+            --border-muted: #cbd5e1; /* slate-300 */
+            --scroll-track: #e2e8f0;
         }
+
+        /* === CLASES UTILITARIAS CONECTADAS AL TEMA === */
+        body { background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
+        
+        .theme-bg-main { background-color: var(--bg-main); }
+        .theme-bg-panel { background-color: var(--bg-panel); }
+        .theme-bg-card { background-color: var(--bg-card); }
+        .theme-bg-input { background-color: var(--bg-input); }
+        
+        .theme-accent-bg { background-color: var(--accent); color: var(--accent-text); }
+        .hover-accent-bg:hover { opacity: 0.9; }
+        
+        .theme-text-main { color: var(--text-main); }
+        .theme-text-muted { color: var(--text-muted); }
+        .theme-text-accent { color: var(--accent); }
+        
+        .theme-border-muted { border-color: var(--border-muted); }
+        .theme-border-accent { border-color: var(--border-accent); }
+        .hover-theme-border-accent:hover { border-color: var(--border-accent); }
+        
+        .hover-theme-bg-hover:hover { background-color: var(--bg-hover); }
+        
+        .focus-border-accent:focus { border-color: var(--border-accent); outline: none; }
+        .focus-ring-accent:focus { box-shadow: 0 0 0 1px var(--border-accent); }
+
+        .shadow-glow { box-shadow: 0 0 10px var(--accent-glow); }
+        .shadow-glow-strong { box-shadow: 0 0 20px var(--accent-glow-strong); }
+        .shadow-panel { box-shadow: 0 4px 15px var(--accent-glow); }
+
+        /* Estilos personalizados para el scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--scroll-track); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        
         .drag-over {
-            background-color: #18181b;
-            border: 2px dashed #39ff14;
+            background-color: var(--bg-panel);
+            border: 2px dashed var(--accent);
         }
         .ticket-card {
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -38,37 +115,61 @@
         .modal-open {
             overflow: hidden;
         }
-        
-        /* Checkbox personalizado estilo neón */
         input[type="checkbox"] {
-            accent-color: #39ff14;
+            accent-color: var(--accent);
         }
     </style>
 </head>
-<body class="bg-black h-screen flex flex-col font-sans text-white">
+<body class="h-screen flex flex-col font-sans">
 
     <!-- Encabezado -->
-    <header class="bg-black border-b border-[#39ff14] shadow-[0_4px_15px_rgba(57,255,20,0.1)] px-6 py-4 flex flex-col md:flex-row justify-between items-center shrink-0 gap-4">
-        <!-- Título (Izquierda) -->
-        <div class="flex-1 flex items-center gap-3 text-[#39ff14] w-full md:w-auto">
-            <i class="fas fa-layer-group text-2xl"></i>
-            <h1 class="text-xl font-bold tracking-wide">Mis Tickets</h1>
+    <header class="theme-bg-main border-b theme-border-accent shadow-panel px-6 py-4 flex flex-col md:flex-row justify-between items-center shrink-0 gap-4 relative z-40">
+        
+        <!-- Título y Selector de Tema (Izquierda) -->
+        <div class="flex-1 flex flex-wrap items-center gap-4 w-full md:w-auto">
+            <div class="flex items-center gap-3 theme-text-accent">
+                <i class="fas fa-layer-group text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">Mis Tickets</h1>
+            </div>
+
+            <!-- Menú Desplegable de Temas -->
+            <div class="relative">
+                <button id="themeButton" onclick="toggleThemeMenu()" class="flex items-center gap-2 theme-bg-panel border theme-border-muted px-3 py-1.5 rounded-lg text-sm theme-text-main hover-theme-border-accent transition-colors shadow-sm">
+                    <i class="fas fa-palette theme-text-accent"></i>
+                    <span class="hidden md:inline">Tema</span>
+                    <i class="fas fa-chevron-down text-[10px] theme-text-muted ml-1"></i>
+                </button>
+                <div id="themeDropdown" class="hidden absolute left-0 mt-2 w-48 theme-bg-panel border theme-border-muted rounded-lg shadow-xl overflow-hidden z-50">
+                    <button onclick="setTheme('neon')" class="w-full text-left px-4 py-2 hover-theme-bg-hover flex items-center gap-3 text-sm theme-text-main">
+                        <div class="w-3 h-3 rounded-full bg-[#39ff14] shadow-[0_0_5px_#39ff14]"></div> Neón (Omnitrix)
+                    </button>
+                    <button onclick="setTheme('red')" class="w-full text-left px-4 py-2 hover-theme-bg-hover flex items-center gap-3 text-sm theme-text-main">
+                        <div class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_5px_#ef4444]"></div> Carmesí
+                    </button>
+                    <button onclick="setTheme('blue')" class="w-full text-left px-4 py-2 hover-theme-bg-hover flex items-center gap-3 text-sm theme-text-main">
+                        <div class="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_5px_#3b82f6]"></div> Océano
+                    </button>
+                    <button onclick="setTheme('white')" class="w-full text-left px-4 py-2 hover-theme-bg-hover flex items-center gap-3 text-sm theme-text-main border-t theme-border-muted">
+                        <div class="w-3 h-3 rounded-full bg-orange-500"></div> Clásico (Claro)
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Estadísticas Globales (Centro) -->
         <div class="flex gap-4 md:gap-8 text-center order-3 md:order-2 w-full md:w-auto justify-center">
-            <div class="bg-zinc-900 border border-zinc-700 px-4 py-1.5 rounded-lg shadow-[0_0_10px_rgba(57,255,20,0.05)] min-w-[140px]">
-                <span class="text-[10px] text-zinc-400 block font-bold uppercase tracking-widest mb-0.5">Por Reparar</span>
+            <div class="theme-bg-panel border theme-border-muted px-4 py-1.5 rounded-lg shadow-sm min-w-[140px]">
+                <span class="text-[10px] theme-text-muted block font-bold uppercase tracking-widest mb-0.5">Por Reparar</span>
                 <div class="flex items-center justify-center gap-2">
-                    <i class="fas fa-tools text-zinc-500 text-sm"></i>
-                    <span class="text-2xl font-bold text-white" id="stat-por-reparar">0</span>
+                    <i class="fas fa-tools theme-text-muted text-sm opacity-70"></i>
+                    <span class="text-2xl font-bold theme-text-main" id="stat-por-reparar">0</span>
                 </div>
             </div>
-            <div class="bg-black border border-[#39ff14] px-4 py-1.5 rounded-lg shadow-[0_0_15px_rgba(57,255,20,0.15)] min-w-[140px]">
-                <span class="text-[10px] text-[#39ff14] block font-bold uppercase tracking-widest mb-0.5">Reparados</span>
+            <div class="theme-bg-main border theme-border-accent px-4 py-1.5 rounded-lg shadow-glow min-w-[140px]">
+                <span class="text-[10px] theme-text-accent block font-bold uppercase tracking-widest mb-0.5">Reparados</span>
                 <div class="flex items-center justify-center gap-2">
-                    <i class="fas fa-check-double text-[#39ff14] text-sm"></i>
-                    <span class="text-2xl font-bold text-[#39ff14]" id="stat-reparados">0</span>
+                    <i class="fas fa-check-double theme-text-accent text-sm"></i>
+                    <span class="text-2xl font-bold theme-text-accent" id="stat-reparados">0</span>
                 </div>
             </div>
         </div>
@@ -76,28 +177,28 @@
         <!-- Buscador y Botón Nuevo Ticket (Derecha) -->
         <div class="flex-1 flex flex-col md:flex-row justify-end items-center w-full md:w-auto gap-3 order-2 md:order-3">
             <div class="relative w-full md:w-64">
-                <i class="fas fa-search absolute left-3 top-3 text-zinc-500"></i>
-                <input type="text" id="searchInput" placeholder="Buscar ticket..." oninput="renderBoard()" class="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] placeholder-zinc-600 transition-colors">
+                <i class="fas fa-search absolute left-3 top-3 theme-text-muted"></i>
+                <input type="text" id="searchInput" placeholder="Buscar ticket..." oninput="renderBoard()" class="w-full pl-10 pr-4 py-2 theme-bg-panel border theme-border-muted theme-text-main rounded-lg focus-border-accent focus-ring-accent placeholder:text-[var(--text-muted)] transition-colors">
             </div>
-            <button onclick="openModal()" class="bg-[#39ff14] text-black hover:bg-white hover:shadow-[0_0_15px_#39ff14] font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 w-full md:w-auto justify-center whitespace-nowrap">
+            <button onclick="openModal()" class="theme-accent-bg hover-accent-bg shadow-glow font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 w-full md:w-auto justify-center whitespace-nowrap">
                 <i class="fas fa-plus"></i> Nuevo Ticket
             </button>
         </div>
     </header>
 
     <!-- Tablero Principal -->
-    <main class="flex-1 overflow-x-auto overflow-y-hidden p-6">
+    <main class="flex-1 overflow-x-auto overflow-y-hidden p-6 relative z-10">
         <div class="flex gap-6 h-full items-start" id="board">
-            <!-- Las columnas se generarán dinámicamente con JavaScript -->
+            <!-- Las columnas se generarán dinámicamente -->
         </div>
     </main>
 
     <!-- Modal para Agregar/Editar Ticket -->
-    <div id="ticketModal" class="fixed inset-0 bg-black bg-opacity-80 hidden justify-center items-center z-50 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
-        <div class="bg-zinc-900 rounded-xl shadow-[0_0_30px_rgba(57,255,20,0.15)] border border-[#39ff14] w-full max-w-md mx-4 transform scale-95 transition-transform duration-300" id="modalContent">
-            <div class="flex justify-between items-center border-b border-zinc-800 px-6 py-4">
-                <h2 class="text-xl font-bold text-[#39ff14]" id="modalTitle">Nuevo Ticket</h2>
-                <button onclick="closeModal()" class="text-zinc-400 hover:text-white transition-colors">
+    <div id="ticketModal" class="fixed inset-0 bg-black/60 hidden justify-center items-center z-50 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+        <div class="theme-bg-panel rounded-xl shadow-glow-strong border theme-border-accent w-full max-w-md mx-4 transform scale-95 transition-transform duration-300" id="modalContent">
+            <div class="flex justify-between items-center border-b theme-border-muted px-6 py-4">
+                <h2 class="text-xl font-bold theme-text-accent" id="modalTitle">Nuevo Ticket</h2>
+                <button onclick="closeModal()" class="theme-text-muted hover:text-[var(--text-main)] transition-colors">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -107,34 +208,34 @@
                 
                 <div class="flex gap-4 mb-4">
                     <div class="flex-1">
-                        <label class="block text-sm font-semibold mb-1 text-zinc-300">N° de Requerimiento <span class="text-[10px] font-normal text-zinc-500">(Ej: R-021354)</span></label>
-                        <input type="text" id="reqNumber" required class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] uppercase placeholder-zinc-700">
+                        <label class="block text-sm font-semibold mb-1 theme-text-main">N° de Requerimiento <span class="text-[10px] font-normal theme-text-muted">(Ej: R-021354)</span></label>
+                        <input type="text" id="reqNumber" required class="w-full px-3 py-2 theme-bg-input border theme-border-muted theme-text-main rounded-lg focus-border-accent focus-ring-accent uppercase placeholder:text-[var(--text-muted)]">
                     </div>
                     <div class="w-24 shrink-0">
-                        <label class="block text-sm font-semibold mb-1 text-[#39ff14]">Equipos</label>
-                        <input type="number" id="reqEquipos" required min="1" value="1" class="w-full px-3 py-2 bg-black border border-[#39ff14] text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-[#39ff14] text-center font-bold">
+                        <label class="block text-sm font-semibold mb-1 theme-text-accent">Equipos</label>
+                        <input type="number" id="reqEquipos" required min="1" value="1" class="w-full px-3 py-2 theme-bg-input border theme-border-accent theme-text-main rounded-lg focus-border-accent focus-ring-accent text-center font-bold">
                     </div>
                 </div>
                 
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold mb-1 text-zinc-300">Asunto / Falla</label>
-                    <input type="text" id="reqSubject" required placeholder="Ej: Equipo bloqueado, no enciende..." class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] placeholder-zinc-700">
+                    <label class="block text-sm font-semibold mb-1 theme-text-main">Asunto / Falla</label>
+                    <input type="text" id="reqSubject" required placeholder="Ej: Equipo bloqueado, no enciende..." class="w-full px-3 py-2 theme-bg-input border theme-border-muted theme-text-main rounded-lg focus-border-accent focus-ring-accent placeholder:text-[var(--text-muted)]">
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold mb-1 text-zinc-300">Contacto / Organización</label>
+                    <label class="block text-sm font-semibold mb-1 theme-text-main">Contacto / Organización</label>
                     <div class="flex relative">
-                        <span class="inline-flex items-center px-3 text-sm text-zinc-400 bg-zinc-900 border border-r-0 border-zinc-700 rounded-l-md">
+                        <span class="inline-flex items-center px-3 text-sm theme-text-muted theme-bg-panel border border-r-0 theme-border-muted rounded-l-md">
                             <i class="fas fa-user"></i>
                         </span>
-                        <input type="text" id="reqContact" placeholder="Nombre y Teléfono" class="rounded-none rounded-r-lg bg-black border border-zinc-700 text-white focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14] block flex-1 min-w-0 w-full text-sm p-2.5 placeholder-zinc-700">
+                        <input type="text" id="reqContact" placeholder="Nombre y Teléfono" class="rounded-none rounded-r-lg theme-bg-input border theme-border-muted theme-text-main focus-border-accent focus-ring-accent block flex-1 min-w-0 w-full text-sm p-2.5 placeholder:text-[var(--text-muted)]">
                     </div>
                 </div>
 
                 <div class="flex gap-4 mb-6">
                     <div class="flex-1">
-                        <label class="block text-sm font-semibold mb-1 text-zinc-300">Estado Inicial</label>
-                        <select id="reqStatus" class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14]">
+                        <label class="block text-sm font-semibold mb-1 theme-text-main">Estado Inicial</label>
+                        <select id="reqStatus" class="w-full px-3 py-2 theme-bg-input border theme-border-muted theme-text-main rounded-lg focus-border-accent focus-ring-accent">
                             <option value="por_llamar">Por Llamar / Contactar</option>
                             <option value="recibido">Equipo Recibido (Acá)</option>
                             <option value="en_proceso">En Proceso / Reparando</option>
@@ -143,8 +244,8 @@
                         </select>
                     </div>
                     <div class="flex-1">
-                        <label class="block text-sm font-semibold mb-1 text-zinc-300">Comunicación</label>
-                        <select id="reqCommStatus" class="w-full px-3 py-2 bg-black border border-zinc-700 text-white rounded-lg focus:outline-none focus:border-[#39ff14] focus:ring-1 focus:ring-[#39ff14]">
+                        <label class="block text-sm font-semibold mb-1 theme-text-main">Comunicación</label>
+                        <select id="reqCommStatus" class="w-full px-3 py-2 theme-bg-input border theme-border-muted theme-text-main rounded-lg focus-border-accent focus-ring-accent">
                             <option value="green">🟢 Excelente</option>
                             <option value="yellow">🟡 Regular</option>
                             <option value="red">🔴 Difícil</option>
@@ -152,27 +253,46 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4 border-t border-zinc-800">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-white hover:bg-zinc-800 rounded-lg font-medium transition">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-[#39ff14] hover:bg-white text-black rounded-lg font-bold shadow-[0_0_10px_rgba(57,255,20,0.3)] hover:shadow-[0_0_15px_#39ff14] transition-all">Guardar Ticket</button>
+                <div class="flex justify-end gap-3 pt-4 border-t theme-border-muted">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 theme-text-main hover-theme-bg-hover rounded-lg font-medium transition border theme-border-muted">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 theme-accent-bg hover-accent-bg rounded-lg font-bold shadow-glow transition-all">Guardar Ticket</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        // --- LOGICA DE TEMAS ---
+        function toggleThemeMenu() {
+            document.getElementById('themeDropdown').classList.toggle('hidden');
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('myTheme', theme);
+            document.getElementById('themeDropdown').classList.add('hidden');
+        }
+
+        // Cierra el menú de temas si haces clic afuera
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('themeDropdown');
+            const button = document.getElementById('themeButton');
+            if (button && dropdown && !button.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
         // --- 1. CONFIGURACIÓN Y ESTADO ---
         
-        // Estructura de las columnas adaptadas a blanco/negro/neón
+        // Estructura dinámica de las columnas
         const COLUMNS = [
-            { id: 'por_llamar', title: '📞 Por Llamar', style: 'border-[#39ff14] text-[#39ff14]' },
-            { id: 'recibido', title: '📥 Equipo Recibido', style: 'border-[#39ff14] text-[#39ff14]' },
-            { id: 'en_proceso', title: '⚙️ En Proceso', style: 'border-[#39ff14] text-[#39ff14]' },
-            { id: 'esperando_retiro', title: '⏳ Esperando Retiro', style: 'border-[#39ff14] text-[#39ff14]' },
-            { id: 'finalizado', title: '✅ Finalizados', style: 'border-[#39ff14] text-[#39ff14]' }
+            { id: 'por_llamar', title: '📞 Por Llamar', style: 'theme-border-accent theme-text-accent' },
+            { id: 'recibido', title: '📥 Equipo Recibido', style: 'theme-border-accent theme-text-accent' },
+            { id: 'en_proceso', title: '⚙️ En Proceso', style: 'theme-border-accent theme-text-accent' },
+            { id: 'esperando_retiro', title: '⏳ Esperando Retiro', style: 'theme-border-accent theme-text-accent' },
+            { id: 'finalizado', title: '✅ Finalizados', style: 'theme-border-accent theme-text-accent' }
         ];
 
-        // Estado principal de la aplicación
         let tickets = JSON.parse(localStorage.getItem('myTickets')) || [];
 
         // --- 2. FUNCIONES DE RENDERIZADO ---
@@ -183,7 +303,6 @@
 
             tickets.forEach(ticket => {
                 const qty = parseInt(ticket.equipmentCount) || 1;
-                // Consideramos que si está finalizado o esperando retiro, el equipo ya está reparado.
                 if (ticket.status === 'esperando_retiro' || ticket.status === 'finalizado') {
                     reparados += qty;
                 } else {
@@ -199,11 +318,10 @@
             const board = document.getElementById('board');
             board.innerHTML = ''; 
             
-            // Obtener el término de búsqueda actual
             const searchInput = document.getElementById('searchInput');
             const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
 
-            // Lógica para detectar duplicados (ignorando tickets 'finalizado')
+            // Detector de duplicados
             const activeTickets = tickets.filter(t => t.status !== 'finalizado');
             const duplicatesCount = activeTickets.reduce((acc, ticket) => {
                 const num = ticket.number.toLowerCase();
@@ -213,15 +331,12 @@
 
             COLUMNS.forEach(col => {
                 const colDiv = document.createElement('div');
-                colDiv.className = `flex flex-col bg-zinc-900 rounded-xl min-w-[320px] w-[320px] max-h-full shrink-0 border border-zinc-800`;
+                colDiv.className = `flex flex-col theme-bg-panel rounded-xl min-w-[320px] w-[320px] max-h-full shrink-0 border theme-border-muted`;
                 
-                // Filtrar por columna y también por la barra de búsqueda si hay texto escrito
                 const colTickets = tickets.filter(t => {
                     if (t.status !== col.id) return false;
+                    if (!searchTerm) return true; 
                     
-                    if (!searchTerm) return true; // Si no hay búsqueda, mostramos todo en esta columna
-                    
-                    // Comprobamos si el término de búsqueda está en el número, asunto o contacto
                     const matchNumber = t.number.toLowerCase().includes(searchTerm);
                     const matchSubject = t.subject.toLowerCase().includes(searchTerm);
                     const matchContact = t.contact ? t.contact.toLowerCase().includes(searchTerm) : false;
@@ -230,9 +345,9 @@
                 });
 
                 colDiv.innerHTML = `
-                    <div class="p-3 border-b border-zinc-800 flex justify-between items-center bg-black rounded-t-xl">
-                        <h2 class="font-bold text-sm uppercase tracking-wider text-white">${col.title}</h2>
-                        <span class="text-xs font-bold px-2 py-1 rounded border bg-black ${col.style}">${colTickets.length}</span>
+                    <div class="p-3 border-b theme-border-muted flex justify-between items-center theme-bg-main rounded-t-xl">
+                        <h2 class="font-bold text-sm uppercase tracking-wider theme-text-main">${col.title}</h2>
+                        <span class="text-xs font-bold px-2 py-1 rounded border theme-bg-main ${col.style}">${colTickets.length}</span>
                     </div>
                     <div class="flex-1 overflow-y-auto p-3 space-y-3 ticket-container" 
                          id="col-${col.id}" 
@@ -240,7 +355,6 @@
                          ondragover="allowDrop(event)"
                          ondragenter="dragEnter(event)"
                          ondragleave="dragLeave(event)">
-                        <!-- Aquí van los tickets -->
                     </div>
                 `;
                 
@@ -248,25 +362,23 @@
                 
                 const container = colDiv.querySelector('.ticket-container');
                 colTickets.forEach(ticket => {
-                    // Verificar si este ticket específico es un duplicado activo
                     const isDuplicate = ticket.status !== 'finalizado' && duplicatesCount[ticket.number.toLowerCase()] > 1;
                     container.appendChild(createTicketCard(ticket, isDuplicate));
                 });
             });
 
-            // Actualizar estadísticas cada vez que se renderiza el tablero
             updateStats();
         }
 
         function createTicketCard(ticket, isDuplicate) {
             const card = document.createElement('div');
             
-            // Lógica de estilos si el ticket es duplicado
-            let cardClasses = 'ticket-card bg-black p-4 rounded-lg border cursor-grab relative group ';
+            // Lógica de estilos si el ticket es duplicado vs normal
+            let cardClasses = 'ticket-card theme-bg-card p-4 rounded-lg border cursor-grab relative group ';
             if (isDuplicate) {
                 cardClasses += 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:shadow-[0_0_20px_rgba(239,68,68,0.6)]';
             } else {
-                cardClasses += 'border-zinc-700 hover:border-[#39ff14] hover:shadow-[0_0_10px_rgba(57,255,20,0.1)]';
+                cardClasses += 'theme-border-muted hover-theme-border-accent hover:shadow-glow';
             }
             card.className = cardClasses;
             card.draggable = true;
@@ -280,11 +392,11 @@
                 const progress = (completed / total) * 100;
 
                 tasksHtml = `
-                    <div class="mt-3 bg-zinc-900 p-2 rounded border border-zinc-800">
+                    <div class="mt-3 theme-bg-panel p-2 rounded border theme-border-muted">
                         <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-semibold text-zinc-400">Tareas (${completed}/${total})</span>
-                            <div class="w-16 bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                                <div class="bg-[#39ff14] h-full transition-all duration-300" style="width: ${progress}%"></div>
+                            <span class="text-xs font-semibold theme-text-muted">Tareas (${completed}/${total})</span>
+                            <div class="w-16 theme-bg-hover rounded-full h-1.5 overflow-hidden border theme-border-muted">
+                                <div class="theme-accent-bg h-full transition-all duration-300" style="width: ${progress}%"></div>
                             </div>
                         </div>
                         <ul class="space-y-1">
@@ -292,9 +404,9 @@
                                 <li class="flex items-start gap-2 text-sm">
                                     <input type="checkbox" ${task.done ? 'checked' : ''} 
                                            onchange="toggleTask('${ticket.id}', ${index})"
-                                           class="mt-1 w-3.5 h-3.5 cursor-pointer bg-black border-zinc-600">
-                                    <span class="${task.done ? 'line-through text-zinc-600' : 'text-zinc-200'} leading-tight break-words flex-1">${task.text}</span>
-                                    <button onclick="deleteTask('${ticket.id}', ${index})" class="text-zinc-600 hover:text-white opacity-0 group-hover:opacity-100 transition-colors">
+                                           class="mt-1 w-3.5 h-3.5 cursor-pointer theme-bg-input theme-border-muted">
+                                    <span class="${task.done ? 'line-through theme-text-muted opacity-70' : 'theme-text-main'} leading-tight break-words flex-1">${task.text}</span>
+                                    <button onclick="deleteTask('${ticket.id}', ${index})" class="theme-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-colors">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </li>
@@ -314,34 +426,34 @@
             const activeComm = commStyles[commStatus];
 
             card.innerHTML = `
-                ${isDuplicate ? `<div class="bg-red-900/40 border border-red-500 text-red-400 text-xs font-bold px-2 py-1.5 rounded mb-3 flex items-center justify-center gap-2 animate-pulse"><i class="fas fa-exclamation-triangle"></i> ¡TICKET DUPLICADO!</div>` : ''}
+                ${isDuplicate ? `<div class="bg-red-500/10 border border-red-500 text-red-500 text-xs font-bold px-2 py-1.5 rounded mb-3 flex items-center justify-center gap-2 animate-pulse"><i class="fas fa-exclamation-triangle"></i> ¡TICKET DUPLICADO!</div>` : ''}
                 
                 <div class="flex justify-between items-start mb-2">
-                    <span class="inline-block px-2 py-1 bg-black border ${isDuplicate ? 'border-red-500 text-red-400' : 'border-[#39ff14] text-[#39ff14]'} text-xs font-bold rounded">
+                    <span class="inline-block px-2 py-1 theme-bg-main border ${isDuplicate ? 'border-red-500 text-red-500' : 'theme-border-accent theme-text-accent'} text-xs font-bold rounded">
                         <i class="fas fa-ticket-alt mr-1"></i> ${ticket.number}
                     </span>
                     <div class="flex items-center gap-3">
                         <div class="w-3 h-3 rounded-full ${activeComm.color}" title="${activeComm.title}"></div>
                         <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                            <button onclick="editTicket('${ticket.id}')" class="text-zinc-500 hover:text-[#39ff14] text-sm transition-colors" title="Editar">
+                            <button onclick="editTicket('${ticket.id}')" class="theme-text-muted hover:theme-text-accent text-sm transition-colors" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="deleteTicket('${ticket.id}')" class="text-zinc-500 hover:text-white text-sm transition-colors" title="Eliminar">
+                            <button onclick="deleteTicket('${ticket.id}')" class="theme-text-muted hover:text-red-500 text-sm transition-colors" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>
                 </div>
                 
-                <h3 class="font-bold text-white text-sm mb-2 leading-tight">${ticket.subject}</h3>
+                <h3 class="font-bold theme-text-main text-sm mb-2 leading-tight">${ticket.subject}</h3>
                 
                 <div class="flex flex-wrap gap-2 mb-2">
                     ${ticket.contact ? `
-                    <div class="text-xs text-zinc-300 flex items-center gap-1.5 bg-zinc-800 p-1.5 rounded border border-zinc-700 flex-1 min-w-[120px]">
-                        <i class="fas fa-address-book text-zinc-500"></i>
+                    <div class="text-xs theme-text-main flex items-center gap-1.5 theme-bg-panel p-1.5 rounded border theme-border-muted flex-1 min-w-[120px]">
+                        <i class="fas fa-address-book theme-text-muted"></i>
                         <span class="truncate">${ticket.contact}</span>
                     </div>` : ''}
-                    <div class="text-xs flex items-center gap-1.5 bg-black p-1.5 rounded border ${isDuplicate ? 'border-red-500 text-red-400' : 'border-[#39ff14] text-[#39ff14]'} font-bold shrink-0" title="Cantidad de equipos en este ticket">
+                    <div class="text-xs flex items-center gap-1.5 theme-bg-main p-1.5 rounded border ${isDuplicate ? 'border-red-500 text-red-500' : 'theme-border-accent theme-text-accent'} font-bold shrink-0" title="Cantidad de equipos en este ticket">
                         <i class="fas fa-desktop"></i>
                         <span>${equipmentCount}</span>
                     </div>
@@ -350,8 +462,8 @@
                 ${tasksHtml}
 
                 <form onsubmit="addTask(event, '${ticket.id}')" class="mt-2 flex gap-1 relative">
-                    <input type="text" placeholder="Añadir tarea..." required class="w-full text-xs px-2 py-1.5 bg-black border border-zinc-700 text-white rounded focus:outline-none focus:border-[#39ff14] placeholder-zinc-600">
-                    <button type="submit" class="bg-zinc-800 text-[#39ff14] px-2 py-1 rounded border border-zinc-700 hover:bg-black hover:border-[#39ff14] transition-colors">
+                    <input type="text" placeholder="Añadir tarea..." required class="w-full text-xs px-2 py-1.5 theme-bg-input border theme-border-muted theme-text-main rounded focus-border-accent placeholder:text-[var(--text-muted)]">
+                    <button type="submit" class="theme-bg-panel theme-text-accent px-2 py-1 rounded border theme-border-muted hover-theme-bg-hover hover-theme-border-accent transition-colors">
                         <i class="fas fa-plus"></i>
                     </button>
                 </form>
@@ -451,9 +563,7 @@
             ev.target.classList.add('opacity-50'); 
         }
 
-        function allowDrop(ev) {
-            ev.preventDefault();
-        }
+        function allowDrop(ev) { ev.preventDefault(); }
 
         function dragEnter(ev) {
             ev.preventDefault();
